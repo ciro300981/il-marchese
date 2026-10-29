@@ -89,7 +89,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.result === 'success') {
-                        showResult('✅', `Cliente ${data.nome} convalidato!`, 'ricordagli di lasciare la recensione ;-)', '#2e7d32');
+                        showResult('✅', `Cliente ${data.nome} convalidato!`, 'ricordagli di lasciare la recensione 😉', '#2e7d32');
                     } else if (data.result === 'already_used') {
                         showResult('⚠️', `Cliente ${data.nome}`, 'Coupon già convalidato in precedenza!', '#f57c00');
                     } else {
