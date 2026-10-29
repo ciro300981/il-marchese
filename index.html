@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Il Marchese - Pass Privilegiato</title>
-    <!-- Font elegante da Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,6 +20,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
         .card {
             background-color: white;
@@ -32,7 +32,6 @@
             text-align: center;
             box-sizing: border-box;
         }
-        /* Assicurati di caricare il logo del Marchese su GitHub chiamandolo "logo.jpg" */
         .logo {
             max-width: 180px;
             margin-bottom: 20px;
@@ -45,7 +44,7 @@
         p.subtitle {
             color: #666;
             font-size: 13px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             line-height: 1.5;
         }
         .form-group {
@@ -67,17 +66,11 @@
             border-radius: 6px;
             font-family: 'Montserrat', sans-serif;
             box-sizing: border-box;
-            transition: 0.3s;
-        }
-        .form-group input:focus {
-            border-color: var(--primary-gold);
-            outline: none;
         }
         .checkbox-group {
             display: flex;
             align-items: flex-start;
-            margin-top: 20px;
-            margin-bottom: 25px;
+            margin: 20px 0;
             text-align: left;
         }
         .checkbox-group input {
@@ -101,24 +94,26 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+        .btn-review {
+            background-color: #4285F4;
+            margin-top: 15px;
         }
         .btn:hover {
-            background-color: var(--primary-gold);
+            opacity: 0.9;
         }
-        .btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        /* Stili per lo Step 2 (QR Code) */
-        #step2 {
+
+        #step2, #step3 {
             display: none;
         }
+
         .success-title {
             color: #2e7d32;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 10px;
         }
         #qr-container {
             margin: 20px 0;
@@ -153,12 +148,11 @@
             padding: 15px;
             border-radius: 6px;
             text-align: left;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .terms-box h4 {
             margin: 0 0 10px 0;
-            font-size: 13px;
-            color: var(--text-dark);
+            font-size: 12px;
         }
         .terms-box ul {
             margin: 0;
@@ -166,18 +160,20 @@
             font-size: 11px;
             color: #666;
         }
-        .terms-box ul li { margin-bottom: 5px; }
+        .icon-thanks {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <!-- INSERISCI QUI IL NOME DEL TUO FILE LOGO (es. logo.jpg) -->
         <img src="logo.jpg" alt="Il Marchese Logo" class="logo" onerror="this.style.display='none'">
         
         <!-- STEP 1: FORM DI REGISTRAZIONE -->
         <div id="step1">
-            <h2>Buono Sconto 20% + Digestivo in Omaggio</h2>
+            <h2>Pass Privilegiato: Sconto 20% + Digestivo in Omaggio</h2>
             <p class="subtitle">Inserisci i tuoi dati per attivare subito il tuo buono sconto! Valido dal lunedì al venerdì.</p>
             
             <form id="couponForm">
@@ -203,13 +199,13 @@
             </form>
         </div>
 
-        <!-- STEP 2: QR CODE E TIMER (Nascosto all'inizio) -->
+        <!-- STEP 2: QR CODE E TIMER -->
         <div id="step2">
             <h2 class="success-title">Il tuo Buono è Attivo!</h2>
             <p class="subtitle">Mostra questo QR Code in cassa al momento del conto per ricevere il 20% di sconto e il digestivo offerto.</p>
             
             <div id="qr-container">
-                <img id="qrCode" src="" alt="Il tuo QR Code univoco">
+                <img id="qrCode" src="" alt="Il tuo QR Code">
             </div>
             
             <div class="terms-box">
@@ -226,84 +222,105 @@
                 <div class="timer-countdown" id="timer">--:--:--:--</div>
             </div>
         </div>
+
+        <!-- STEP 3: CONVALIDATO E LINK RECENSIONI -->
+        <div id="step3">
+            <div class="icon-thanks">👏</div>
+            <h2 style="color: #2e7d32; font-size: 22px;">Grazie per la visita!</h2>
+            <p class="subtitle" style="margin-top: 10px;">Il tuo buono è stato convalidato con successo alla cassa.</p>
+            <p class="subtitle" style="font-weight: 600; color: #333;">Ti è piaciuta l'esperienza da <strong>Il Marchese</strong>? Lasciaci una recensione su Google, ci aiuta tantissimo!</p>
+            
+            <!-- Inserisci qui l'URL diretto alle recensioni Google de Il Marchese -->
+            <a href="https://search.google.com/local/writereview?placeid=INSERISCI_PLACE_ID_HERE" id="googleReviewLink" target="_blank" class="btn btn-review">Lascia una Recensione</a>
+        </div>
     </div>
 
     <script>
-        // L'URL del tuo Google Apps Script
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWAoaRr_mVDQkegYqa9fXx4Tu9UHbYWL5Z6Kh6AZtBkNDzZszbZay3ogB8Sk1ZfkDhjA/exec';
-        
-        // Al caricamento della pagina, controllo se l'utente ha già un coupon attivo
+        let statusPollInterval = null;
+
         window.onload = () => {
             const savedId = localStorage.getItem('marchese_coupon_id');
             const savedExpiry = localStorage.getItem('marchese_expiry');
-            
-            if (savedId && savedExpiry) {
-                // Il cliente ha già generato un coupon sullo stesso telefono
+            const savedValidated = localStorage.getItem('marchese_validated');
+
+            if (savedValidated === 'true') {
+                mostraStep3();
+            } else if (savedId && savedExpiry) {
                 mostraStep2(savedId, parseInt(savedExpiry));
             }
         };
 
-        // Gestione dell'invio del form
         document.getElementById('couponForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             btn.innerText = 'Attivazione in corso...';
             btn.disabled = true;
 
-            // 1. Recupero l'IP del dispositivo
             let ip = 'IP_NON_RILEVATO';
             try {
                 const resIp = await fetch('https://api.ipify.org?format=json');
                 const dataIp = await resIp.json();
                 ip = dataIp.ip;
-            } catch (err) { console.log('Impossibile rilevare IP'); }
+            } catch (err) {}
 
-            // 2. Genero ID univoco e calcolo la scadenza (6 giorni = 6 * 24 * 60 * 60 * 1000 ms)
             const id_univoco = 'MARCHESE-' + Math.random().toString(36).substr(2, 8).toUpperCase();
             const now = new Date();
             const scadenzaMs = now.getTime() + (6 * 24 * 60 * 60 * 1000);
             const dataScadenzaStr = new Date(scadenzaMs).toLocaleString('it-IT');
 
-            // 3. Prendo i dati dal form e aggiungo quelli nascosti
             const formData = new FormData(this);
             formData.append('ip', ip);
             formData.append('id_univoco', id_univoco);
             formData.append('scadenza', dataScadenzaStr);
 
-            // 4. Invia i dati a Google Sheets
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Evita blocchi di sicurezza del browser
+                mode: 'no-cors',
                 body: formData
             }).then(() => {
-                // Salvataggio nel telefono per impedire refresh e furbate
                 localStorage.setItem('marchese_coupon_id', id_univoco);
                 localStorage.setItem('marchese_expiry', scadenzaMs);
-                
-                // Mostro il QR e il Timer
                 mostraStep2(id_univoco, scadenzaMs);
-            }).catch(error => {
-                alert("C'è stato un problema. Riprova.");
+            }).catch(() => {
+                alert("Si è verificato un errore. Riprova.");
                 btn.innerText = 'Attiva il Mio Buono';
                 btn.disabled = false;
             });
         });
 
-        // Funzione per nascondere il form e mostrare la pagina finale
         function mostraStep2(id, scadenzaMs) {
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
             
-            // Generazione del QR Code tramite API gratuita
-            document.getElementById('qrCode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + id;
+            // Link di convalida che verrà letto dal telefono del cassiere
+            const validateUrl = 'https://ciro300981.github.io/il-marchese/convalida.html?id=' + id;
+            document.getElementById('qrCode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(validateUrl);
             
-            // Avvio del timer alla rovescia
             avviaTimer(scadenzaMs);
+
+            // Controllo automatico ogni 3 secondi per rilevare la convalida del cassiere
+            statusPollInterval = setInterval(() => {
+                fetch(`${SCRIPT_URL}?action=checkStatus&id=${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'USATO') {
+                            clearInterval(statusPollInterval);
+                            localStorage.setItem('marchese_validated', 'true');
+                            mostraStep3();
+                        }
+                    }).catch(() => {});
+            }, 3000);
+        }
+
+        function mostraStep3() {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'block';
         }
 
         function avviaTimer(scadenzaMs) {
             const timerEl = document.getElementById('timer');
-            
             const x = setInterval(function() {
                 const now = new Date().getTime();
                 const distance = scadenzaMs - now;
