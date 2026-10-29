@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convalida Buono - Il Marchese</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #fcf9f2;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 25px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .logo {
+            max-width: 160px;
+            margin-bottom: 25px;
+        }
+        .icon-box {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        p.subtext {
+            color: #555;
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #c5a059;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="logo.jpg" alt="Il Marchese Logo" class="logo" onerror="this.style.display='none'">
+        
+        <div id="loading">
+            <div class="loader"></div>
+            <p>Verifica e convalida coupon in corso...</p>
+        </div>
+
+        <div id="result" style="display:none;">
+            <div class="icon-box" id="icon"></div>
+            <h2 id="title"></h2>
+            <p class="subtext" id="subtext"></p>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWAoaRr_mVDQkegYqa9fXx4Tu9UHbYWL5Z6Kh6AZtBkNDzZszbZay3ogB8Sk1ZfkDhjA/exec';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const couponId = urlParams.get('id');
+
+        if (!couponId) {
+            showResult('❌', 'Codice Non Valido', 'Nessun identificativo coupon fornito.', '#d32f2f');
+        } else {
+            fetch(`${SCRIPT_URL}?action=validate&id=${encodeURIComponent(couponId)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.result === 'success') {
+                        showResult('✅', `Cliente ${data.nome} convalidato!`, 'ricordagli di lasciare la recensione ;-)', '#2e7d32');
+                    } else if (data.result === 'already_used') {
+                        showResult('⚠️', `Cliente ${data.nome}`, 'Coupon già convalidato in precedenza!', '#f57c00');
+                    } else {
+                        showResult('❌', 'Coupon Non Trovato', 'Questo codice non risulta presente a sistema.', '#d32f2f');
+                    }
+                })
+                .catch(() => {
+                    showResult('❌', 'Errore di Connessione', 'Impossibile verificare il coupon. Riprova.', '#d32f2f');
+                });
+        }
+
+        function showResult(icon, title, subtext, titleColor) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            
+            document.getElementById('icon').innerText = icon;
+            const t = document.getElementById('title');
+            t.innerText = title;
+            t.style.color = titleColor;
+            document.getElementById('subtext').innerText = subtext;
+        }
+    </script>
+</body>
+</html>
